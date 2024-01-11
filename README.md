@@ -43,4 +43,34 @@ Finally, we can delete the old damaged database.
 ## Milestone 6 
 Milestone 6 is about Geo Replication and Failover. Both this processes can be performed on Microsoft Azure, and we won't need anything else.
 - Geo Replication is a process which allows to create a read-only copy of a specific database that is also syncronise with this 'original' database. In our case we are using the Database that we have just restored during the previous milestone. On the left-hand menu of this database there is Replicas (under Data Management). If we clik on it, a list with all the replicas should open. For now, our should be empty and we can create a new one by clicking on 'Create replica'. The only thing to do after is to make sure that this replica will be store in a different server, and we can pick an existing one or create a new one. We will choose to create a new one and we just need to make sure that it will be located in a different region then the 'original' one. As authentication method for this server I opted for 'Both SQL and Azure AD authentication'. When the new server is created we can go back to the previous page, and rewiew and finally create the geo replica.
-- Once we have a Geo Replica, we can perform Failover tests. We will basically test the ability to switch to the new server and back. In order to do so, we need to navigate the Azure dashboard and select the SQL server associated with our original database (NOT its Geo Replica!). There on the the left hand menu, under Data Managment, we should find 'Failover groups', and if clicking on it, it will open a list of our current failover groups (that is empty for now). We can create a new failover group clicking on 'Add group'. In the next page we will be asked to enter the name of the 'secondary' server, that is the server we have created when creating our Geo Replica. Then we are ready to create the failover group. If we access its page, we can perform a switch between primary and secondary region by clicking on 'Failover', and we can reverse the process in the same way.   
+- Once we have a Geo Replica, we can perform Failover tests. We will basically test the ability to switch to the new server and back. In order to do so, we need to navigate the Azure dashboard and select the SQL server associated with our original database (NOT its Geo Replica!). There on the the left hand menu, under Data Managment, we should find 'Failover groups', and if clicking on it, it will open a list of our current failover groups (that is empty for now). We can create a new failover group clicking on 'Add group'. In the next page we will be asked to enter the name of the 'secondary' server, that is the server we have created when creating our Geo Replica. Then we are ready to create the failover group. If we access its page, we can perform a switch between primary and secondary region by clicking on 'Failover', and we can reverse the process in the same way.
+
+## Milestone 7
+Milestone 7 is about using Microsoft Entra ID. 
+- We'll begin by enabling Microsoft Entra ID authentication for the SQL Server that hosts the Azure SQL production database. 
+\
+In my case I already had a user with my name, but if you need you can always create a new one by accessing Microsoft Entra ID on Azure, then the users page, and then by clicking 'Create a new user' and following the instruction on the next page.
+\
+After having done that, we should access the SQL Server that hosts your primary database (restored). Under the security section we'll find and click on 'Microsoft Entra'. In the next page we can manage the authentication of the SQL Server by clicking on 'Set admin' and selecting the user with our name. Then we can proceed on saving our changes.
+\
+Now, on Azure Data Studio we should be able to edit the connection of our server and chage the authentication type to 'Azure SQL Directory - Universal with MFA Support'. 
+
+- Now we want to provision our database of a database reader user.
+\
+We again begin by creating a new user. This time its name should be something like DB_Reader.
+\
+Then we go back to Azure Data Studio, we access our server with the Microsoft Entra credentials, and then we run the following query:
+\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CREATE USER [DB_Reader@yourdomain.com] FROM EXTERNAL PROVIDER;
+\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ALTER ROLE db_datareader ADD MEMBER [DB_Reader@yourdomain.com];
+\
+Where [DB_Reader] represents the name of the Microsoft Entra user you just created (DB_Reader). You can find the name of your domain from the Microsoft Entra Directory user page, under User principal name. The domain it's what comes after @.
+\
+Finally we can test the new user connection by editing the connection of the Server on Azure Data Studio, by choosing 'Azure SQL Directory - Universal with MFA Support' as authentication method, and the credentials of the new user as credentials. 
+\
+This will open the Connection page. Here under Account click Add account.. to add the new account. Follow through the log in process. Use the principal name from above as the email address to log in with.
+\
+On the first log in you will be asked to set up a new password. Once the account has been added you are ready to press Connect to connect to the database using the newly created user.
+\
+Now we should be able to connect to the server and to run queries to view data, but not to change them.
