@@ -1,5 +1,7 @@
 # Azure Database Migration
 
+![screenshot](Screenshot.png)
+
 ## Milestone 1
 The beginning of this project consists in setting up the correct work enviroment. 
 So, we begin by setting up a new repo, and by using the correct login on Microsoft Azure (given by AI-Core support team).
